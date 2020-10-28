@@ -23,7 +23,7 @@ function help {
       echo "    $0 -n 'testvm1 testvm2 testvm3'              launch multiple new testvm's   as masterless minions"
       echo "    $0 -n 'testvm1:c2:m1:d3 testvm2:c4:m2'  launch multiple new testvm's   as masterless minions"
       echo "                                            with special settings for cpu, memory and disk"
-      echo "                                            testvm1 with 2 cpu, 1GB memory and 5GB disk"
+      echo "                                            testvm1 with 2 cpu, 1GB memory and 3GB disk"
       echo "                                            defaults are c2 m1 d3"
       echo
       echo "    $0 -s 'salt-master1 testvm1 testvm2 testvm3'"
