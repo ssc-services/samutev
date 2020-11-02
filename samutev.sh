@@ -10,6 +10,24 @@
 f=$0 ; f=${f##*/}; f=${f%.*}
 . $f.conf
 
+if [ ! -d $salt_base ]; then
+  echo
+  echo " configured salt_base=\"$salt_base\" not found!"
+  echo " please configure a valid directory"
+  echo
+  exit 23
+fi
+
+snap list multipass >/dev/null 2>&1
+RET=$?
+if [ ${RET} -ne 0 ]; then
+  echo
+  echo " please install multipass to use samutev"
+  echo " =>  snap install multipass"
+  echo
+  exit 42
+fi
+
 function help {
       echo "Usage:"
       echo "    $0 -h               Display this help message."
