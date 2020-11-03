@@ -248,9 +248,16 @@ if [ ! -z ${mVMs_2_CREATE+x} ]; then
   NEW_MASTER_IP=$(multipass info ${MASTER%%:*}|grep IPv4|awk -F: '{print $2}'|xargs)
   #echo NEW_MASTER_IP=$NEW_MASTER_IP
   create_test_VMs minion "${MINION}" "$NEW_MASTER_IP"
+  ssh -o StrictHostKeyChecking=no root@$NEW_MASTER_IP 'salt-key -A -y; salt-key -L'
+  
   time_end=$(date +%s)
 	alltogether=$(date -d "0 $time_end seconds - $time_start seconds" +'%M:%S')
 	echo "alltogether: $alltogether min."  
+
+  echo
+  echo "Now you start:"
+  echo "    ssh root@$NEW_MASTER_IP"
+  echo
 fi
 
 if [ ! -z ${VMs_2_DELETE+x} ]; then
