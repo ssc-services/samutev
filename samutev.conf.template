@@ -1,5 +1,5 @@
-salt_base="/home/rolszewski/code/git/daimler/vault"
-my_ssh_pub_key="ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC6524rp8mMOA9P/JDxTn2OgsQLa9yDXSa5D02lTXIMmLQdEhFejplTdSq5lTAu2Z3sxdQ7+QRlrBWVZrDTVFf6epEIO8hsrKT5B0GGGLVWkrslwyJaubvWeAx8Htd/81CGRHYQSL7x56ZZOOfSJJPklLxp+xQhhbvRB5tId7Uo8jtMR2eOelxbByO9jSxwg1qpYEPucJVHoOfk3KkRIMhj0bVfk/MgVptW982mNJKfCFP40tl9ELAwsC/jrUZlMM7yblifY5IyYwA9j+HJvBJBq8+aqt0k9rYsI1c8oihWz3frYz5pnvVW7VeTO4Li32rasKkA0DWSYHmaU0NYebUb yoursshkey"
+salt_base=""
+my_ssh_pub_key=""
 
 # --------------------------------------------------
 # --------------------------------------------------
