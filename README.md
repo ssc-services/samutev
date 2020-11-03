@@ -14,8 +14,9 @@ script to deploy quickly local test vm's using multipass.
 test-vms can be deployed either as masterless minion or as a master with minions.
 
 ## 2. requirements
-- multipass
-- a salt-repo-base-directory with salt-states and salt-pillars inside
+- multipass  
+  (`apt install snapd; snap install multipass`)
+- a salt-repo-base-directory with cloned repos `salt-states` and `salt-pillars` of your project inside
 - internet connection (for things like package install)
 
 ## 3. configuration
