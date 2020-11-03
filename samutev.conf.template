@@ -132,7 +132,6 @@ users:
     shell: /bin/bash
     ssh_authorized_keys:
         - $my_ssh_pub_key
-#    passwd: $6$NWGpZNw9T/.TLMhV$94IRUaP8nnhtb8iIhmAxd3FkhqirJU4JKOsSzSlIJglSMPFfRo6s7YqEYsI1HTbzXU.s3jY2DeiCyVERAnYUY/
   - name: root
     ssh_authorized_keys:
         - $my_ssh_pub_key

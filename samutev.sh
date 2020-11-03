@@ -3,7 +3,7 @@
 # Script to launch or delaunch multipass vm's with masterless minion
 #        to easy test salt states
 #
-# 2020-10-21 RO V1.0
+# 2020-10-21 RO
 #
 
 
@@ -57,7 +57,7 @@ function help {
 
 # Parse options 
 PARAMS=""
-unset cVMs_2_CREATE mVMs_2_CREATE VMs_2_DELETE
+unset MasterlessVMs_2_CREATE MasterVMs_2_CREATE VMs_2_DELETE
 while (( "$#" )); do
   case "$1" in
     -h|--help)
@@ -66,7 +66,7 @@ while (( "$#" )); do
       ;;
     -n|--new)
       if [ -n "$2" ] && [ ${2:0:1} != "-" ]; then
-        cVMs_2_CREATE=$2
+        MasterlessVMs_2_CREATE=$2
         shift 2
       else
         echo "Error: Argument for $1 is missing" >&2
@@ -75,8 +75,8 @@ while (( "$#" )); do
       ;;
     -s|--new-with-saltmaster)
       if [ -n "$2" ] && [ ${2:0:1} != "-" ]; then
-        mVMs_2_CREATE=$2
-        counter=0; for i in $mVMs_2_CREATE; do counter=$((counter+1)); done
+        MasterVMs_2_CREATE=$2
+        counter=0; for i in $MasterVMs_2_CREATE; do counter=$((counter+1)); done
         if [ $counter -lt 2 ]; then
           echo "Error: need minimum 2 vm's - 1 saltmaster-vm and 1 minion-vm"
           exit 2
@@ -232,31 +232,33 @@ if [ ! -f ${salt_base}/salt-dev-pillars/top.sls ];        then echo "$DEVPILLARS
 if [ ! -f ${salt_base}/salt-dev-pillars/devpillars.sls ]; then echo "$DEVPILLARS"     > ${salt_base}/salt-dev-pillars/devpillars.sls; fi
 if [ ! -d ${salt_base}/localstore ];                      then mkdir ${salt_base}/localstore; fi
 
-if [ ! -z ${cVMs_2_CREATE+x} ]; then
+if [ ! -z ${MasterlessVMs_2_CREATE+x} ]; then
   time_start=$(date +%s)
-	create_test_VMs masterless "${cVMs_2_CREATE}"
+	create_test_VMs masterless "${MasterlessVMs_2_CREATE}"
   time_end=$(date +%s)
 	alltogether=$(date -d "0 $time_end seconds - $time_start seconds" +'%M:%S')
 	echo "alltogether: $alltogether min."
 fi
 
-if [ ! -z ${mVMs_2_CREATE+x} ]; then
+if [ ! -z ${MasterVMs_2_CREATE+x} ]; then
   time_start=$(date +%s)
-  MASTER=$(echo "$mVMs_2_CREATE" | head -n1 | cut -d ' ' -f1) 
-  MINION=$(echo "$mVMs_2_CREATE" | head -n1 | cut -d ' ' -f2-)
+  MASTER=$(echo "$MasterVMs_2_CREATE" | head -n1 | cut -d ' ' -f1) 
+  MINION=$(echo "$MasterVMs_2_CREATE" | head -n1 | cut -d ' ' -f2-)
 	create_test_VMs master "${MASTER}"
   NEW_MASTER_IP=$(multipass info ${MASTER%%:*}|grep IPv4|awk -F: '{print $2}'|xargs)
   #echo NEW_MASTER_IP=$NEW_MASTER_IP
   create_test_VMs minion "${MINION}" "$NEW_MASTER_IP"
-  ssh -o StrictHostKeyChecking=no root@$NEW_MASTER_IP 'salt-key -A -y; salt-key -L'
+  ssh -o StrictHostKeyChecking=no root@$NEW_MASTER_IP 'salt-key -A -y; echo; salt-key -L'
   
   time_end=$(date +%s)
 	alltogether=$(date -d "0 $time_end seconds - $time_start seconds" +'%M:%S')
+  echo
 	echo "alltogether: $alltogether min."  
 
   echo
-  echo "Now you start:"
+  echo "READY to go:"
   echo "    ssh root@$NEW_MASTER_IP"
+  echo "    salt '*' test.ping"
   echo
 fi
 
