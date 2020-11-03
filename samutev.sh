@@ -230,6 +230,7 @@ function delete_and_purge_VMs {
 if [ ! -d ${salt_base}/salt-dev-pillars ];                then mkdir ${salt_base}/salt-dev-pillars; fi
 if [ ! -f ${salt_base}/salt-dev-pillars/top.sls ];        then echo "$DEVPILLARS_top" > ${salt_base}/salt-dev-pillars/top.sls; fi
 if [ ! -f ${salt_base}/salt-dev-pillars/devpillars.sls ]; then echo "$DEVPILLARS"     > ${salt_base}/salt-dev-pillars/devpillars.sls; fi
+if [ ! -d ${salt_base}/localstore ];                      then mkdir ${salt_base}/localstore; fi
 
 if [ ! -z ${cVMs_2_CREATE+x} ]; then
   time_start=$(date +%s)
