@@ -1,14 +1,24 @@
-# samutev: Salt Multipass Test Vm's
+<!-- TOC -->
+
+- [1. samutev: Salt Multipass Test Vm's](#1-samutev-salt-multipass-test-vms)
+    - [1.1. requirements](#11-requirements)
+    - [1.2. configuration](#12-configuration)
+    - [1.3. usage](#13-usage)
+    - [1.4. vmware vm settings](#14-vmware-vm-settings)
+
+<!-- /TOC -->
+
+# 1. samutev: Salt Multipass Test Vm's
 
 script to deploy quickly local test vm's using multipass.
 test-vms can be deployed either as masterless minion or as a master with minions.
 
-# requirements
+## 2. requirements
 - multipass
 - a salt-repo-base-directory with salt-states and salt-pillars inside
 - internet connection (for things like package install)
 
-# configuration
+## 3. configuration
 
 in `samutev.conf` customize these settings to your need:
 1. `salt_base=""`
@@ -19,7 +29,7 @@ _Second_ setting is used to deploy the ssh-pub-key to each launchend vm to `root
 
 Further, in `samutev.conf` you can customize [cloudinit](https://cloudinit.readthedocs.io/en/latest/) to bootstrap the vms.
 
-# usage
+## 4. usage
 ```
 ./samutev.sh -h
 Usage:
@@ -50,3 +60,7 @@ Examples:
     ./samutev.sh -d  testvm                     # delaunch/delete testvm
     ./samutev.sh -d 'testvm1 testvm2 testvm3'   # delaunch/delete multiple testvm's
 ```
+
+## 5. vmware vm settings
+Folgende Settings sind für eine VMware-VM erforderlich:
+![settings vmware-vm](vmware_setting.png)
