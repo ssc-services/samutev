@@ -83,7 +83,7 @@ In configured `$salt_base` (`samutev.conf`) two directories will be created, if 
 - `salt-dev-pillars/devpillars.sls`  -    configured as `pillar_roots`  
    place to put you dev-pillars - outside of git repos
 
-Both directories will be available either to the salt master or tom asterless minions directly
+Both directories will be available either to the salt master or to masterless minions directly
 
 ### 1.4.2. vm defaults
 
