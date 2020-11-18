@@ -6,6 +6,11 @@
 # 2020-10-21 RO
 # 2020-11-18 TS
 
+# set default values for resource settings (applies to help text and code)
+C_DEFAULT=2
+M_DEFAULT=1
+D_DEFAULT=3
+
 f=$0
 f=${f##*/}
 f=${f%.*}
@@ -31,11 +36,13 @@ fi
 
 function help() {
   echo -e "Usage:"
-  echo -e "\t$0 -h \t Display this help message"
-  echo -e "\t$0 -n <VM> \t new \t <VM> with masterless minion"
-  echo -e "\t$0 -s <VM> \t new \t <VM> with minion and salt master, first vm => saltmaster, minimum of 2 vms."
-  echo -e "\t$0 -d <VM> \t delete\t <VM>"
-  echo -e "\t$0 -l \t list vms"
+  echo -e "\t$0 -h \t\t Display this help message"
+  echo -e "\t$0 [-b] -n <VM> \t new \t <VM> with masterless minion"
+  echo -e "\t\t\t\t\t\t (default: latest lts, -b => bionic)"
+  echo -e "\t$0 [-b] -s <VM> \t new \t <VM> with minion and salt master, first vm => saltmaster, minimum of 2 vms"
+  echo -e "\t\t\t\t\t\t (default: latest lts, -b => bionic)"
+  echo -e "\t$0 -d <VM> \t\t delete\t <VM>"
+  echo -e "\t$0 -l \t\t list vms"
   echo
   echo -e "Examples:"
   echo -e "\t$0 -n  testvm \t\t\t\t launch new testvm \t\t as masterless minion"
@@ -44,7 +51,7 @@ function help() {
   echo -e "\t\t\t\t\t\t\t\t with special settings for cpu, memory and disk:"
   echo -e "\t\t\t\t\t\t\t\t\t - testvm1 with: c2 => 2 cpu, m1 => 1GB memory and d3 => 3GB disk"
   echo -e "\t\t\t\t\t\t\t\t\t - testvm2 with: c4 => 4 cpu, m2 => 2GB memory"
-  echo -e "\t\t\t\t\t\t\t\t\t   (defaults are c2 m1 d3)"
+  echo -e "\t\t\t\t\t\t\t\t\t   (defaults are c${C_DEFAULT} m${M_DEFAULT} d${D_DEFAULT})"
   echo
   echo -e "\t$0 -s 'salt-master1 testvm1 testvm2 testvm3' \t launch a saltmaster with multiple new testvms"
   echo -e "\t\t\t\t\t\t\t\t\t - First vm = saltmaster"
@@ -58,6 +65,10 @@ function help() {
 
 # Parse options
 #PARAMS=""
+
+IMAGE=""
+IMAGE_INFO=""
+IMAGE_CODE=""
 unset MasterlessVMs_2_CREATE MasterVMs_2_CREATE VMs_2_DELETE
 while (("$#")); do
   case "$1" in
@@ -102,6 +113,12 @@ while (("$#")); do
     multipass list
     shift
     ;;
+  -b)
+    IMAGE="bionic"
+    IMAGE_INFO=" and image 'bionic'"
+    IMAGE_CODE="18.04"
+    shift
+    ;;
   -* | --*=) # unsupported flags
     echo "Error: Unsupported flag $1" >&2
     echo
@@ -116,6 +133,8 @@ while (("$#")); do
     ;;
   esac
 done
+IMAGE_CODE=${IMAGE_CODE:-20.04}
+IMAGE=${IMAGE:-focal}
 # set positional arguments in their proper place
 #eval set -- "$PARAMS"
 #echo PARAMS=$PARAMS
@@ -128,15 +147,19 @@ function create_test_VMs() {
   # build needed cloudinit-file
   case $TYPE in
   "masterless")
-    echo "$CLOUDINIT_1_header" "$CLOUDINIT_2_masterless" "$CLOUDINIT_3_user" >tmp_cloudinit.$$
+    echo "$CLOUDINIT_1_header" "$CLOUDINIT_2_masterless" "$CLOUDINIT_3_user" > tmp_cloudinit.$$
     ;;
   "minion")
-    echo "$CLOUDINIT_1_header" "$CLOUDINIT_2_minion" "$CLOUDINIT_3_user" | sed -e "s/xxxIPxxx/$MASTER_IP/" >tmp_cloudinit.$$
+    echo "$CLOUDINIT_1_header" "$CLOUDINIT_2_minion" "$CLOUDINIT_3_user" | sed -e "s/xxxIPxxx/$MASTER_IP/" > tmp_cloudinit.$$
     ;;
   "master")
-    echo "$CLOUDINIT_1_header" "$CLOUDINIT_2_master" "$CLOUDINIT_3_user" >tmp_cloudinit.$$
+    echo "$CLOUDINIT_1_header" "$CLOUDINIT_2_master" "$CLOUDINIT_3_user" > tmp_cloudinit.$$
     ;;
   esac
+
+  # switch cloud-init config as $RELEASE variables et al sadly seem to be not yet available in this cloudinit version
+  sed -i "s@VERSION_ID@$IMAGE_CODE@g" tmp_cloudinit.$$
+  sed -i "s@VERSION_CODENAME@$IMAGE@g" tmp_cloudinit.$$
 
   # create VMs
   for VMinput in $VMs; do
@@ -158,12 +181,12 @@ function create_test_VMs() {
         esac
       done
     fi
-    CPU=${aCPU:-2}
-    MEM=${aMEM:-1}
-    DISK=${aDISK:-3}
+    CPU=${aCPU:-$C_DEFAULT}
+    MEM=${aMEM:-$M_DEFAULT}
+    DISK=${aDISK:-$D_DEFAULT}
 
-    echo "launching ${VM} ($TYPE with cpu=$CPU mem=${MEM}G disk=${DISK}G)"
-    multipass launch --cpus "${CPU}" --disk "${DISK}"G --mem "${MEM}"G --name "${VM}" --cloud-init tmp_cloudinit.$$
+    echo "launching ${VM} ($TYPE with cpu=$CPU mem=${MEM}G disk=${DISK}G${IMAGE_INFO})"
+    multipass launch --cpus "${CPU}" --disk "${DISK}"G --mem "${MEM}"G --name "${VM}" --cloud-init tmp_cloudinit.$$ ${IMAGE}
     RET=$?
     if [ $RET = 0 ]; then
       case $TYPE in
