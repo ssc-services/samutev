@@ -46,32 +46,29 @@ Further, in `samutev.conf` you can customize [cloudinit](https://cloudinit.readt
 ```
 ./samutev.sh -h
 Usage:
-    ./samutev.sh -h          # Display this help message.
-    ./samutev.sh -n <VM>     # new <VM> with masterless minion
-    ./samutev.sh -s <VM>     # new <VM> with minion and salt master. FIRST vm=saltmaster. minimum 2 vm's
-    ./samutev.sh -d <VM>     # delete <VM>
-    ./samutev.sh -l          # list   VM's
+        ./samutev.sh -h          Display this help message
+        ./samutev.sh -n <VM>     new     <VM> with masterless minion
+        ./samutev.sh -s <VM>     new     <VM> with minion and salt master, first vm => saltmaster, minimum of 2 vms.
+        ./samutev.sh -d <VM>     delete  <VM>
+        ./samutev.sh -l          list vms
 
 Examples:
-    # --- masterless minions
-    ./samutev.sh -n  testvm                     # launch new testvm              as masterless minion
-    ./samutev.sh -n 'testvm1 testvm2 testvm3'   # launch multiple new testvm's   as masterless minions
-    ./samutev.sh -n 'testvm1:c2:m1:d3 testvm2:c4:m2'
-                                                # launch multiple new testvm's   as masterless minions
-                                                #   with special settings for cpu, memory and disk
-                                                #   testvm1 with 2 cpu, 1GB memory and 3GB disk
-                                                #   defaults are c2 m1 d3
-    
-    # --- one salt-master with at least one minion
-    ./samutev.sh -s 'salt-master1 testvm1 testvm2 testvm3'
-                                                # launch a saltmaster with multiple new testvm's
-                                                #   FIRST vm = saltmaster
-                                                #   minimum = 2 vm's
-    ./samutev.sh -s 'salt-master1:c2:m2:d6 testvm1'
-    
-    # --- delete test vm's
-    ./samutev.sh -d  testvm                     # delaunch/delete testvm
-    ./samutev.sh -d 'testvm1 testvm2 testvm3'   # delaunch/delete multiple testvm's
+        ./samutev.sh -n  testvm                                  launch new testvm               as masterless minion
+        ./samutev.sh -n 'testvm1 testvm2 testvm3'                launch multiple new testvms     as masterless minions
+        ./samutev.sh -n 'testvm1:c2:m1:d3 testvm2:c4:m2'         launch multiple new testvms     as masterless minions
+                                                                 with special settings for cpu, memory and disk:
+                                                                         - testvm1 with: c2 => 2 cpu, m1 => 1GB memory and d3 => 3GB disk
+                                                                         - testvm2 with: c4 => 4 cpu, m2 => 2GB memory
+                                                                           (defaults are c2 m1 d3)
+
+        ./samutev.sh -s 'salt-master1 testvm1 testvm2 testvm3'   launch a saltmaster with multiple new testvms
+                                                                         - First vm = saltmaster
+                                                                         - Minimum = 2 vms
+        ./samutev.sh -s 'salt-master1:c2:m2:d6 testvm1'          same as above but with custom resource settings
+
+        ./samutev.sh -d  testvm                                  delaunch/delete testvm
+        ./samutev.sh -d 'testvm1 testvm2 testvm3'                delaunch/delete multiple testvms
+
 ```
 
 ## 1.4. some details
