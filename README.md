@@ -46,13 +46,17 @@ Further, in `samutev.conf` you can customize [cloudinit](https://cloudinit.readt
 ```
 ./samutev.sh -h
 Usage:
-        ./samutev.sh -h                  Display this help message
-        ./samutev.sh [-b] -n <VM>        new     <VM> with masterless minion
-                                                 (default: latest lts, -b => bionic)
-        ./samutev.sh [-b] -s <VM>        new     <VM> with minion and salt master, first vm => saltmaster, minimum of 2 vms
-                                                 (default: latest lts, -b => bionic)
-        ./samutev.sh -d <VM>             delete  <VM>
-        ./samutev.sh -l                  list vms
+        ./samutev.sh -h                          Display this help message
+        ./samutev.sh [-r <release>] -n <VM>      new     <VM> with masterless minion
+        ./samutev.sh [-r <release>] -s <VM>      new     <VM> with minion and salt master, first vm => saltmaster, minimum of 2 vms
+        ./samutev.sh -d <VM>                     delete  <VM>
+        ./samutev.sh -l                          list vms
+
+                                                 <release>: default is 'lts' aliased to 'focal'
+                                                 Other available options are:
+                                                         - 16.04 (or xenial)
+                                                         - 18.04 (or bionic)
+                                                         - 20.04 (or focal or lts)
 
 Examples:
         ./samutev.sh -n  testvm                                  launch new testvm               as masterless minion

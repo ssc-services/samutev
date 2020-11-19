@@ -34,15 +34,19 @@ if [ ${RET} -ne 0 ]; then
   exit 42
 fi
 
+CODENAME_OF_LTS=$(multipass find | grep LTS | grep lts | awk '{ print $2 }' | sed 's@,@\n@g' | grep -v lts | tail -n1)
+
 function help() {
   echo -e "Usage:"
-  echo -e "\t$0 -h \t\t Display this help message"
-  echo -e "\t$0 [-b] -n <VM> \t new \t <VM> with masterless minion"
-  echo -e "\t\t\t\t\t\t (default: latest lts, -b => bionic)"
-  echo -e "\t$0 [-b] -s <VM> \t new \t <VM> with minion and salt master, first vm => saltmaster, minimum of 2 vms"
-  echo -e "\t\t\t\t\t\t (default: latest lts, -b => bionic)"
-  echo -e "\t$0 -d <VM> \t\t delete\t <VM>"
-  echo -e "\t$0 -l \t\t list vms"
+  echo -e "\t$0 -h \t\t\t Display this help message"
+  echo -e "\t$0 [-r <release>] -n <VM> \t new \t <VM> with masterless minion"
+  echo -e "\t$0 [-r <release>] -s <VM> \t new \t <VM> with minion and salt master, first vm => saltmaster, minimum of 2 vms"
+  echo -e "\t$0 -d <VM> \t\t\t delete\t <VM>"
+  echo -e "\t$0 -l \t\t\t list vms"
+  echo
+  echo -e "\t\t\t\t\t\t <release>: default is 'lts' aliased to '${CODENAME_OF_LTS}'"
+  echo -e "\t\t\t\t\t\t Other available options are:"
+  echo -e "$(multipass find | grep LTS | awk '{ print $1" (or "$2")" }' | sed 's@,@ or @g' | sed 's@^@\t\t\t\t\t\t\t - @g' | sed 's@daily:@@g')"
   echo
   echo -e "Examples:"
   echo -e "\t$0 -n  testvm \t\t\t\t launch new testvm \t\t as masterless minion"
@@ -113,11 +117,19 @@ while (("$#")); do
     multipass list
     shift
     ;;
-  -b)
-    IMAGE="bionic"
-    IMAGE_INFO=" and image 'bionic'"
-    IMAGE_CODE="18.04"
-    shift
+  -r)
+    if [ -n "$2" ] && [ "${2:0:1}" != "-" ]; then
+      IMAGE="$2"
+      VALID_IMAGE=$(multipass find | grep LTS | grep -c "${IMAGE}" | grep -q '^0$' && echo not found || echo found)
+      if [ "${VALID_IMAGE}" == "not found" ]; then
+        echo "Error: Argument '${IMAGE}' for $1 is invalid" >&2
+        exit 2
+      fi
+      shift 2
+    else
+      echo "Error: Argument for $1 is missing" >&2
+      exit 1
+    fi
     ;;
   -* | --*=) # unsupported flags
     echo "Error: Unsupported flag $1" >&2
@@ -133,8 +145,13 @@ while (("$#")); do
     ;;
   esac
 done
-IMAGE_CODE=${IMAGE_CODE:-20.04}
-IMAGE=${IMAGE:-focal}
+
+IMAGE=${IMAGE:-${CODENAME_OF_LTS}}
+IMAGE_INFO=" and image '${IMAGE}'"
+echo "${IMAGE}" | grep -c lts | grep -q '^1$' && IMAGE=${CODENAME_OF_LTS}
+IMAGE=$(multipass find | grep LTS | grep "${IMAGE}" | awk '{ print $2 }' | sed 's@,@\n@' | grep -v lts | head -n1)
+IMAGE_CODE=$(multipass find | grep LTS | grep "${IMAGE}" | awk '{ print $1 }' | sed 's@daily:@@g')
+
 # set positional arguments in their proper place
 #eval set -- "$PARAMS"
 #echo PARAMS=$PARAMS
