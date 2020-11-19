@@ -37,33 +37,33 @@ fi
 CODENAME_OF_LTS=$(multipass find | grep LTS | grep lts | awk '{ print $2 }' | sed 's@,@\n@g' | grep -v lts | tail -n1)
 
 function help() {
-  echo -e "Usage:"
-  echo -e "\t$0 -h \t\t\t Display this help message"
-  echo -e "\t$0 [-r <release>] -n <VM> \t new \t <VM> with masterless minion"
-  echo -e "\t$0 [-r <release>] -s <VM> \t new \t <VM> with minion and salt master, first vm => saltmaster, minimum of 2 vms"
-  echo -e "\t$0 -d <VM> \t\t\t delete\t <VM>"
-  echo -e "\t$0 -l \t\t\t list vms"
+  echo "Usage:"
+  echo "  $0 -h                        display this help message"
+  echo "  $0 [-r <release>] -n <VM>    new    <VM> with masterless minion"
+  echo "  $0 [-r <release>] -s <VM>    new    <VM> with minion and salt master, first vm => saltmaster, minimum of 2 vms"
+  echo "  $0 -d <VM>                   delete <VM>"
+  echo "  $0 -l                        list vms"
   echo
-  echo -e "\t\t\t\t\t\t <release>: default is 'lts' aliased to '${CODENAME_OF_LTS}'"
-  echo -e "\t\t\t\t\t\t Other available options are:"
-  echo -e "$(multipass find | grep LTS | awk '{ print $1" (or "$2")" }' | sed 's@,@ or @g' | sed 's@^@\t\t\t\t\t\t\t - @g' | sed 's@daily:@@g')"
+  echo "                                         <release>: default is 'lts' aliased to '${CODENAME_OF_LTS}'"
+  echo "                                         Other available options are:"
+  multipass find | grep LTS | awk '{ print $1" (or "$2")" }' | sed 's@,@ or @g' | sed 's@^@                                           - @g' | sed 's@daily:@@g'
   echo
-  echo -e "Examples:"
-  echo -e "\t$0 -n  testvm \t\t\t\t launch new testvm \t\t as masterless minion"
-  echo -e "\t$0 -n 'testvm1 testvm2 testvm3' \t\t launch multiple new testvms \t as masterless minions"
-  echo -e "\t$0 -n 'testvm1:c2:m1:d3 testvm2:c4:m2' \t launch multiple new testvms \t as masterless minions"
-  echo -e "\t\t\t\t\t\t\t\t with special settings for cpu, memory and disk:"
-  echo -e "\t\t\t\t\t\t\t\t\t - testvm1 with: c2 => 2 cpu, m1 => 1GB memory and d3 => 3GB disk"
-  echo -e "\t\t\t\t\t\t\t\t\t - testvm2 with: c4 => 4 cpu, m2 => 2GB memory"
-  echo -e "\t\t\t\t\t\t\t\t\t   (defaults are c${C_DEFAULT} m${M_DEFAULT} d${D_DEFAULT})"
+  echo "Examples:"
+  echo "  $0 -n  testvm                                 launch new testvm            as masterless minion"
+  echo "  $0 -n 'testvm1 testvm2 testvm3'               launch multiple new testvms  as masterless minions"
+  echo "  $0 -n 'testvm1:c2:m1:d3 testvm2:c4:m2'        launch multiple new testvms  as masterless minions"
+  echo "                                                          with special settings for cpu, memory and disk:"
+  echo "                                                            - testvm1 with: c2 => 2 cpu, m1 => 1GB memory and d3 => 3GB disk"
+  echo "                                                            - testvm2 with: c4 => 4 cpu, m2 => 2GB memory"
+  echo "                                                              (defaults are c${C_DEFAULT} m${M_DEFAULT} d${D_DEFAULT})"
   echo
-  echo -e "\t$0 -s 'salt-master1 testvm1 testvm2 testvm3' \t launch a saltmaster with multiple new testvms"
-  echo -e "\t\t\t\t\t\t\t\t\t - First vm = saltmaster"
-  echo -e "\t\t\t\t\t\t\t\t\t - Minimum = 2 vms"
-  echo -e "\t$0 -s 'salt-master1:c2:m2:d6 testvm1' \t same as above but with custom resource settings"
+  echo "  $0 -s 'salt-master1 testvm1 testvm2 testvm3'  launch a saltmaster with multiple new testvms"
+  echo "                                                            - First vm = saltmaster"
+  echo "                                                            - Minimum = 2 vms"
+  echo "  $0 -s 'salt-master1:c2:m2:d6 testvm1'         same as above but with custom resource settings"
   echo
-  echo -e "\t$0 -d  testvm \t\t\t\t delaunch/delete testvm"
-  echo -e "\t$0 -d 'testvm1 testvm2 testvm3' \t\t delaunch/delete multiple testvms"
+  echo "  $0 -d  testvm                                 delaunch/delete testvm"
+  echo "  $0 -d 'testvm1 testvm2 testvm3'               delaunch/delete multiple testvms"
   echo
 }
 
