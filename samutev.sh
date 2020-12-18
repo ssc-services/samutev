@@ -35,33 +35,34 @@ fi
 CODENAME_OF_LTS=$(multipass find | grep LTS | grep lts | awk '{ print $2 }' | sed 's@,@\n@g' | grep -v lts | tail -n1)
 
 function help() {
+  scriptname="$(basename "${0}")"
   echo "Usage:"
-  echo "  $0 -h                        display this help message"
-  echo "  $0 [-r <release>] -n <VM>    new    <VM> with masterless minion"
-  echo "  $0 [-r <release>] -s <VM>    new    <VM> with minion and salt master, first vm => saltmaster, minimum of 2 vms"
-  echo "  $0 -d <VM>                   delete <VM>"
-  echo "  $0 -l                        list vms"
+  echo "  ${scriptname} -h                        display this help message"
+  echo "  ${scriptname} [-r <release>] -n <VM>    new    <VM> with masterless minion"
+  echo "  ${scriptname} [-r <release>] -s <VM>    new    <VM> with minion and salt master, first vm => saltmaster, minimum of 2 vms"
+  echo "  ${scriptname} -d <VM>                   delete <VM>"
+  echo "  ${scriptname} -l                        list vms"
   echo
   echo "                                         <release>: default is 'lts' aliased to '${CODENAME_OF_LTS}'"
   echo "                                         Other available options are:"
   multipass find | grep LTS | awk '{ print $1" (or "$2")" }' | sed 's@,@ or @g' | sed 's@^@                                           - @g' | sed 's@daily:@@g'
   echo
   echo "Examples:"
-  echo "  $0 -n  testvm                                 launch new testvm            as masterless minion"
-  echo "  $0 -n 'testvm1 testvm2 testvm3'               launch multiple new testvms  as masterless minions"
-  echo "  $0 -n 'testvm1:c2:m1:d3 testvm2:c4:m2'        launch multiple new testvms  as masterless minions"
+  echo "  ${scriptname} -n  testvm                                 launch new testvm            as masterless minion"
+  echo "  ${scriptname} -n 'testvm1 testvm2 testvm3'               launch multiple new testvms  as masterless minions"
+  echo "  ${scriptname} -n 'testvm1:c2:m1:d3 testvm2:c4:m2'        launch multiple new testvms  as masterless minions"
   echo "                                                          with special settings for cpu, memory and disk:"
   echo "                                                            - testvm1 with: c2 => 2 cpu, m1 => 1GB memory and d3 => 3GB disk"
   echo "                                                            - testvm2 with: c4 => 4 cpu, m2 => 2GB memory"
   echo "                                                              (defaults are c${C_DEFAULT} m${M_DEFAULT} d${D_DEFAULT})"
   echo
-  echo "  $0 -s 'salt-master1 testvm1 testvm2 testvm3'  launch a saltmaster with multiple new testvms"
+  echo "  ${scriptname} -s 'salt-master1 testvm1 testvm2 testvm3'  launch a saltmaster with multiple new testvms"
   echo "                                                            - First vm = saltmaster"
   echo "                                                            - Minimum = 2 vms"
-  echo "  $0 -s 'salt-master1:c2:m2:d6 testvm1'         same as above but with custom resource settings"
+  echo "  ${scriptname} -s 'salt-master1:c2:m2:d6 testvm1'         same as above but with custom resource settings"
   echo
-  echo "  $0 -d  testvm                                 delaunch/delete testvm"
-  echo "  $0 -d 'testvm1 testvm2 testvm3'               delaunch/delete multiple testvms"
+  echo "  ${scriptname} -d  testvm                                 delaunch/delete testvm"
+  echo "  ${scriptname} -d 'testvm1 testvm2 testvm3'               delaunch/delete multiple testvms"
   echo
 }
 
