@@ -1,0 +1,12 @@
+---
+name: linting
+
+"on": push
+
+jobs:
+  shellcheck:
+    name: QA for Shellscripts
+    runs-on: ubuntu-latest
+    steps:
+      - name: ShellCheck
+        uses: ludeeus/action-shellcheck@1.0.0
