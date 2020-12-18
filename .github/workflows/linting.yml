@@ -8,6 +8,8 @@ jobs:
     name: QA for Shellscripts
     runs-on: ubuntu-latest
     steps:
+      - name: Check out code from repository
+        uses: actions/checkout@v2
       - name: ShellCheck
         uses: ludeeus/action-shellcheck@1.0.0
         with:
