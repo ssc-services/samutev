@@ -254,7 +254,7 @@ function delete_and_purge_VMs() {
     echo
     multipass delete "${VM}"
     duration=$SECONDS
-    echo "delaunched  $VM in $(($duration / 60)) minutes and $(($duration % 60)) seconds."
+    echo "delaunched  $VM in $((duration / 60)) minutes and $((duration % 60)) seconds."
     echo
   done
   multipass purge
