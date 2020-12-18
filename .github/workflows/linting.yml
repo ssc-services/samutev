@@ -15,3 +15,5 @@ jobs:
         continue-on-error: true
         with:
           severity: style
+          check_together: 'yes'
+          additional_files: 'samutev.conf.template'
