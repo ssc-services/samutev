@@ -11,10 +11,8 @@ C_DEFAULT=2
 M_DEFAULT=1
 D_DEFAULT=3
 
-f=$0
-f=${f##*/}
-f=${f%.*}
-. "$f".conf
+# shellcheck source=samutev.conf.template
+source "$(readlink -f "${0%.*}")".conf
 
 if [ ! -d "$salt_base" ]; then
   echo
