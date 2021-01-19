@@ -11,8 +11,10 @@ C_DEFAULT=2
 M_DEFAULT=1
 D_DEFAULT=3
 
+scriptpath=$(readlink -f "${0}")
+
 # shellcheck source=samutev.conf.template
-source "$(readlink -f "${0%.*}")".conf
+source "${scriptpath%.*}".conf
 
 if [ ! -d "$salt_base" ]; then
   echo
