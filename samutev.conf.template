@@ -1,6 +1,7 @@
 salt_base=""
 my_ssh_pub_key=""
-
+DEFAULT_GCP_ZONE="europe-west4-a"
+FALLBACK_GCP_MACH_TYPE="e2-micro"
 # --------------------------------------------------
 # --------------------------------------------------
 CLOUDINIT_1_header="
@@ -58,6 +59,7 @@ package_upgrade: false
 CLOUDINIT_2_master="
 packages:
   - salt-master
+  - nfs-common
 
 write_files:
 - content: |
@@ -77,6 +79,7 @@ write_files:
 CLOUDINIT_2_masterless="
 packages:
   - salt-minion
+  - nfs-common
 
 write_files:
 - content: |
