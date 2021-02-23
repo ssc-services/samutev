@@ -135,4 +135,6 @@ Lenovo x390 (16GB RAM)| 04:27 min
 Lenoveo P53 (32GB RAM)| 03:31 min
 
 #### gcp
-TBD
+environment | time
+------------|------
+not relevant| 05:38

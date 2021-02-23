@@ -54,7 +54,7 @@ fi
 
 # TBD check that gcloud init was done
 
-if [ "${PROV}" != "multipass" -a "$(apt list --installed 2>&1| grep -c -e nfs-kernel-server -e autossh)" != "2" ]; then
+if [ "${PROV}" != "multipass" ] && [ "$(apt list --installed 2>&1| grep -c -e nfs-kernel-server -e autossh)" != "2" ]; then
   echo
   echo " please install nfs-kernel-server and autossh to use samutev with provider $PROV"
   echo " =>  apt install -y nfs-kernel-server portmap autossh"
@@ -80,9 +80,9 @@ function help() {
   echo
   echo "                                         <release>: default is 'lts' aliased to '${CODENAME_OF_LTS}'"
   echo "                                         Other available options are:"
-  echo "${PROV}" | grep -q '^multipass$' && \
-  multipass find | grep LTS | awk '{ print $1" (or "$2")" }' | sed 's@,@ or @g' | sed 's@^@                                           - @g' | sed 's@daily:@@g' || \
-  gcloud compute images list --filter="family=ubuntu" | grep -e lts | grep minimal | awk '{ print $3}' | sed 's@^@                                           - @g'
+  if echo "${PROV}" | grep -q '^multipass$'; then \
+  multipass find | grep LTS | awk '{ print $1" (or "$2")" }' | sed 's@,@ or @g' | sed 's@^@                                           - @g' | sed 's@daily:@@g' ;else \
+  gcloud compute images list --filter="family=ubuntu" | grep -e lts | grep minimal | awk '{ print $3}' | sed 's@^@                                           - @g';fi
   echo
   echo "Examples:"
   echo "  ${scriptname} -n  testvm                                 launch new testvm            as masterless minion"
@@ -150,9 +150,9 @@ while (("$#")); do
     fi
     ;;
   -l | --list)
-    echo "${PROV}" | grep -q '^multipass$' && \
-    multipass list || \
-    gcloud compute instances list
+    if echo "${PROV}" | grep -q '^multipass$'; then \
+    multipass list; else \
+    gcloud compute instances list; fi
     shift
     ;;
   -r)
@@ -211,20 +211,23 @@ function create_test_VMs() {
   # build needed cloudinit-file
   case $TYPE in
   "masterless")
+    # shellcheck disable=SC2154
     echo "$CLOUDINIT_1_header" "$CLOUDINIT_2_masterless" "$CLOUDINIT_3_user" > tmp_cloudinit.$$
     ;;
   "minion")
+    # shellcheck disable=SC2154
     echo "$CLOUDINIT_1_header" "$CLOUDINIT_2_minion" "$CLOUDINIT_3_user" | sed -e "s/xxxIPxxx/$MASTER_IP/" > tmp_cloudinit.$$
     ;;
   "master")
+    # shellcheck disable=SC2154
     echo "$CLOUDINIT_1_header" "$CLOUDINIT_2_master" "$CLOUDINIT_3_user" > tmp_cloudinit.$$
     ;;
   esac
 
   # switch cloud-init config as $RELEASE variables et al sadly seem to be not yet available in this cloudinit version
   sed -i "s@VERSION_ID@$IMAGE_CODE@g" tmp_cloudinit.$$
-  echo "${PROV}" | grep -q '^multipass$' && sed -i "s@VERSION_CODENAME@$IMAGE@g" tmp_cloudinit.$$ || \
-  sed -i "s@VERSION_CODENAME@$OS_CODENAME@g" tmp_cloudinit.$$
+  if echo "${PROV}" | grep -q '^multipass$'; then sed -i "s@VERSION_CODENAME@$IMAGE@g" tmp_cloudinit.$$; else \
+  sed -i "s@VERSION_CODENAME@$OS_CODENAME@g" tmp_cloudinit.$$; fi
 
   AUTOSSH_MPORT=8000
   # create VMs
@@ -233,6 +236,7 @@ function create_test_VMs() {
     unset aCPU CPU aMEM MEM aDISK DISK
     VM="${VMinput//:*/}"
     if echo "$VMinput" | grep -q :; then
+      # shellcheck disable=SC2001
       for i in $(echo "${VMinput#*:}" | sed -e "s/:/ /g"); do
         case $i in
         c*)
@@ -263,9 +267,9 @@ function create_test_VMs() {
     fi
 
     echo "launching ${VM} ($TYPE with cpu=$CPU mem=${MEM}G disk=${DISK}G${IMAGE_INFO})"
-    echo "${PROV}" | grep -q '^multipass$' && \
-    multipass launch --cpus "${CPU}" --disk "${DISK}"G --mem "${MEM}"G --name "${VM}" --cloud-init tmp_cloudinit.$$ "${IMAGE}" || \
-    gcloud compute instances create "${VM}" --zone="${DEFAULT_GCP_ZONE}" --machine-type="$GCP_MACH_TYPE" --image-project=ubuntu-os-cloud --image-family="${IMAGE}" --boot-disk-type=pd-standard --boot-disk-size="${DISK}GB" --metadata-from-file user-data=tmp_cloudinit.$$
+    if echo "${PROV}" | grep -q '^multipass$'; then \
+    multipass launch --cpus "${CPU}" --disk "${DISK}"G --mem "${MEM}"G --name "${VM}" --cloud-init tmp_cloudinit.$$ "${IMAGE}"; else \
+    gcloud compute instances create "${VM}" --zone="${DEFAULT_GCP_ZONE}" --machine-type="$GCP_MACH_TYPE" --image-project=ubuntu-os-cloud --image-family="${IMAGE}" --boot-disk-type=pd-standard --boot-disk-size="${DISK}GB" --metadata-from-file user-data=tmp_cloudinit.$$; fi
     RET=$?
     if [ "$TYPE" != "minion" ]; then
       if [ "${PROV}" != "multipass" ]; then
@@ -291,7 +295,7 @@ function create_test_VMs() {
           grep -q "${salt_base}/salt-states" /etc/exports || sudo bash -c "cat /tmp/exports.$$ >> /etc/exports"
           # set active and remove backup or revert -> TBD terminate (and cleanup?) here when export mgmt fails
           # TBD why does exportfs -a (instead of restart, which would be better) doesn't remove removed exports?
-          sudo systemctl restart nfs-kernel-server && sudo rm -f /etc/exports.$$ || sudo cp -p /etc/exports.$$ /etc/exports
+          if sudo systemctl restart nfs-kernel-server; then sudo rm -f /etc/exports.$$; else sudo cp -p /etc/exports.$$ /etc/exports; fi
         fi
       else
         EXEC_CMD_PREFIX="multipass exec ${VM}"
@@ -303,20 +307,20 @@ function create_test_VMs() {
         ${EXEC_CMD_PREFIX} --                         sudo mkdir -p /srv/salt/salt-states
         ${EXEC_CMD_PREFIX} --                         sudo mkdir -p /srv/salt/salt-pillars
 
-        echo "${PROV}" | grep -q '^multipass$' && multipass mount "${salt_base}"/salt-states        "${VM}":/srv/salt/salt-states || \
-        ${EXEC_CMD_PREFIX} --                         "while [ ! -f /var/lib/cloud/instance/boot-finished ]; do echo Waiting for cloud-init to finish... && sleep 5; done && mount -t nfs -o proto=tcp localhost:\"${salt_base}\"/salt-states /srv/salt/salt-states"
-        echo "${PROV}" | grep -q '^multipass$' && multipass mount "${salt_base}"/salt-pillars       "${VM}":/srv/salt/salt-pillars || \
-        ${EXEC_CMD_PREFIX} --                         "mount -t nfs -o proto=tcp localhost:\"${salt_base}\"/salt-pillars /srv/salt/salt-pillars"
+        if echo "${PROV}" | grep -q '^multipass$'; then multipass mount "${salt_base}"/salt-states        "${VM}":/srv/salt/salt-states; else \
+        ${EXEC_CMD_PREFIX} --                         "while [ ! -f /var/lib/cloud/instance/boot-finished ]; do echo Waiting for cloud-init to finish... && sleep 5; done && mount -t nfs -o proto=tcp localhost:\"${salt_base}\"/salt-states /srv/salt/salt-states"; fi
+        if echo "${PROV}" | grep -q '^multipass$'; then multipass mount "${salt_base}"/salt-pillars       "${VM}":/srv/salt/salt-pillars; else \
+        ${EXEC_CMD_PREFIX} --                         "mount -t nfs -o proto=tcp localhost:\"${salt_base}\"/salt-pillars /srv/salt/salt-pillars"; fi
 
         ${EXEC_CMD_PREFIX} --                         sudo mkdir -p /srv/salt/localstore
 
-        echo "${PROV}" | grep -q '^multipass$' && multipass mount "${salt_base}"/localstore         "${VM}":/srv/salt/localstore || \
-        ${EXEC_CMD_PREFIX} --                         "mount -t nfs -o proto=tcp localhost:\"${salt_base}\"/localstore /srv/salt/localstore"
+        if echo "${PROV}" | grep -q '^multipass$'; then multipass mount "${salt_base}"/localstore         "${VM}":/srv/salt/localstore; else \
+        ${EXEC_CMD_PREFIX} --                         "mount -t nfs -o proto=tcp localhost:\"${salt_base}\"/localstore /srv/salt/localstore"; fi
 
         ${EXEC_CMD_PREFIX} --                         sudo mkdir -p /srv/salt/salt-dev-pillars
 
-        echo "${PROV}" | grep -q '^multipass$' && multipass mount "${salt_base}"/salt-dev-pillars   "${VM}":/srv/salt/salt-dev-pillars || \
-        ${EXEC_CMD_PREFIX} --                         "mount -t nfs -o proto=tcp localhost:\"${salt_base}\"/salt-dev-pillars /srv/salt/salt-dev-pillars"
+        if echo "${PROV}" | grep -q '^multipass$'; then multipass mount "${salt_base}"/salt-dev-pillars   "${VM}":/srv/salt/salt-dev-pillars; else \
+        ${EXEC_CMD_PREFIX} --                         "mount -t nfs -o proto=tcp localhost:\"${salt_base}\"/salt-dev-pillars /srv/salt/salt-dev-pillars"; fi
 
         ${EXEC_CMD_PREFIX} --                         sudo systemctl restart salt-minion
         ;;
@@ -329,20 +333,20 @@ function create_test_VMs() {
         ${EXEC_CMD_PREFIX} --                         sudo mkdir -p /srv/salt/salt-states
         ${EXEC_CMD_PREFIX} --                         sudo mkdir -p /srv/salt/salt-pillars
 
-        echo "${PROV}" | grep -q '^multipass$' && multipass mount "${salt_base}"/salt-states        "${VM}":/srv/salt/salt-states || \
-        ${EXEC_CMD_PREFIX} --                         "while [ ! -f /var/lib/cloud/instance/boot-finished ]; do echo Waiting for cloud-init to finish... && sleep 5; done && mount -t nfs -o proto=tcp localhost:\"${salt_base}\"/salt-states /srv/salt/salt-states"
-        echo "${PROV}" | grep -q '^multipass$' && multipass mount "${salt_base}"/salt-pillars       "${VM}":/srv/salt/salt-pillars || \
-        ${EXEC_CMD_PREFIX} --                         "mount -t nfs -o proto=tcp localhost:\"${salt_base}\"/salt-pillars /srv/salt/salt-pillars"
+        if echo "${PROV}" | grep -q '^multipass$'; then multipass mount "${salt_base}"/salt-states        "${VM}":/srv/salt/salt-states; else \
+        ${EXEC_CMD_PREFIX} --                         "while [ ! -f /var/lib/cloud/instance/boot-finished ]; do echo Waiting for cloud-init to finish... && sleep 5; done && mount -t nfs -o proto=tcp localhost:\"${salt_base}\"/salt-states /srv/salt/salt-states"; fi
+        if echo "${PROV}" | grep -q '^multipass$'; then multipass mount "${salt_base}"/salt-pillars       "${VM}":/srv/salt/salt-pillars; else \
+        ${EXEC_CMD_PREFIX} --                         "mount -t nfs -o proto=tcp localhost:\"${salt_base}\"/salt-pillars /srv/salt/salt-pillars"; fi
 
         ${EXEC_CMD_PREFIX} --                         sudo mkdir -p /srv/salt/localstore
 
-        echo "${PROV}" | grep -q '^multipass$' && multipass mount "${salt_base}"/localstore         "${VM}":/srv/salt/localstore || \
-        ${EXEC_CMD_PREFIX} --                         "mount -t nfs -o proto=tcp localhost:\"${salt_base}\"/localstore /srv/salt/localstore"
+        if echo "${PROV}" | grep -q '^multipass$'; then multipass mount "${salt_base}"/localstore         "${VM}":/srv/salt/localstore; else \
+        ${EXEC_CMD_PREFIX} --                         "mount -t nfs -o proto=tcp localhost:\"${salt_base}\"/localstore /srv/salt/localstore"; fi
 
         ${EXEC_CMD_PREFIX} --                         sudo mkdir -p /srv/salt/salt-dev-pillars
 
-        echo "${PROV}" | grep -q '^multipass$' && multipass mount "${salt_base}"/salt-dev-pillars   "${VM}":/srv/salt/salt-dev-pillars || \
-        ${EXEC_CMD_PREFIX} --                         "mount -t nfs -o proto=tcp localhost:\"${salt_base}\"/salt-dev-pillars /srv/salt/salt-dev-pillars"
+        if echo "${PROV}" | grep -q '^multipass$'; then multipass mount "${salt_base}"/salt-dev-pillars   "${VM}":/srv/salt/salt-dev-pillars; else \
+        ${EXEC_CMD_PREFIX} --                         "mount -t nfs -o proto=tcp localhost:\"${salt_base}\"/salt-dev-pillars /srv/salt/salt-dev-pillars"; fi
 
         ${EXEC_CMD_PREFIX} --                         sudo systemctl restart salt-master
         ;;
@@ -350,10 +354,10 @@ function create_test_VMs() {
       echo
     fi
 
-    echo "${PROV}" | grep -q '^multipass$' && multipass info "${VM}" || \
-    gcloud compute instances describe "${VM}" | grep -e ^name -e natIP -e diskSize -e ubuntu-os-cloud | sed 's@^name:@a_name:@g' | sed 's@^  - https.*licenses/@OS: @g' | sed 's@^ *@@g' | sort | sed 's@^a_@@g'
+    if echo "${PROV}" | grep -q '^multipass$'; then multipass info "${VM}"; else \
+    gcloud compute instances describe "${VM}" | grep -e ^name -e natIP -e diskSize -e ubuntu-os-cloud | sed 's@^name:@a_name:@g' | sed 's@^  - https.*licenses/@OS: @g' | sed 's@^ *@@g' | sort | sed 's@^a_@@g'; fi
     duration=$SECONDS
-    echo "launched  ${VM} in $(($duration / 60)) minutes and $(($duration % 60)) seconds."
+    echo "launched  ${VM} in $((duration / 60)) minutes and $((duration % 60)) seconds."
     echo
   done
   rm -f tmp_cloudinit.$$
@@ -368,13 +372,13 @@ function delete_and_purge_VMs() {
     VM=${VMin%%:*}
     echo "delaunching $VM"
     echo
-    echo "${PROV}" | grep -q '^multipass$' && multipass delete "${VM}" || \
-    gcloud compute instances delete -q --delete-disks=all "${VM}"
+    if echo "${PROV}" | grep -q '^multipass$'; then multipass delete "${VM}"; else \
+    gcloud compute instances delete -q --delete-disks=all "${VM}"; fi
     if [ "${PROV}" != "multipass" ]; then
       killall autossh > /dev/null 2>&1
       sudo cp -p /etc/exports{,_preremove.$$}
       sudo sed -i "/^.*# samutev .* $VM\$/d" /etc/exports
-      sudo systemctl restart nfs-kernel-server && sudo rm -f /etc/exports_preremove.$$ || sudo cp -p /etc/exports_preremove.$$ /etc/exports
+      if sudo systemctl restart nfs-kernel-server; then sudo rm -f /etc/exports_preremove.$$; else sudo cp -p /etc/exports_preremove.$$ /etc/exports; fi
     fi
     duration=$SECONDS
     echo "delaunched  $VM in $((duration / 60)) minutes and $((duration % 60)) seconds."
@@ -385,15 +389,18 @@ function delete_and_purge_VMs() {
   alltogether=$(date -d "0 $time_end seconds - $time_start seconds" +'%M:%S')
   echo "alltogether: $alltogether min."
   echo
-  echo "${PROV}" | grep -q '^multipass$' && multipass list || \
-  gcloud compute instances list
+  if echo "${PROV}" | grep -q '^multipass$'; then multipass list; else \
+  gcloud compute instances list; fi
   echo
 }
 
 # --- main
 # make sure there is no trailing / - important for some NFS export operations
+# below shellcheck disable is because the suggested alternative doesn't support regex for line end matching which is a requirement here
+# shellcheck disable=SC2001
 salt_base=$(echo "${salt_base}" | sed 's@/$@@g')
 if [ ! -d "${salt_base}"/salt-dev-pillars ]; then mkdir "${salt_base}"/salt-dev-pillars; fi
+# shellcheck disable=SC2154
 if [ ! -f "${salt_base}"/salt-dev-pillars/top.sls ]; then echo "$DEVPILLARS_top" > "${salt_base}"/salt-dev-pillars/top.sls; fi
 if [ ! -f "${salt_base}"/salt-dev-pillars/devpillars.sls ]; then echo "$DEVPILLARS" > "${salt_base}"/salt-dev-pillars/devpillars.sls; fi
 if [ ! -d "${salt_base}"/localstore ]; then mkdir "${salt_base}"/localstore; fi
@@ -405,8 +412,10 @@ if [ -n "${MasterlessVMs_2_CREATE+x}" ]; then
   alltogether=$(date -d "0 $time_end seconds - $time_start seconds" +'%M:%S')
   echo "alltogether: $alltogether min."
   echo
+  # below shellcheck is disabled because pgrep ist not an alternative if you want to display the full command line (in contrast to information extraction)
+  # shellcheck disable=SC2009
   echo "${PROV}" | grep -q '^multipass$' || \
-  echo -e "HINT: ssh tunnels are not maintained across reboots yet - re-establish them after reboot by running (foreach IP in <master IP or masterless minion IPs>):\n  $(ps -ef | grep [a]utossh | sed 's@^.*/autossh@autossh -f@g' | grep "root")"
+  echo -e "HINT: ssh tunnels are not maintained across reboots yet - re-establish them after reboot by running (foreach IP in <master IP or masterless minion IPs>):\n  $(ps -ef | grep '[a]utossh' | sed 's@^.*/autossh@autossh -f@g' | grep "root")"
 fi
 
 if [ -n "${MasterVMs_2_CREATE+x}" ]; then
@@ -433,8 +442,10 @@ if [ -n "${MasterVMs_2_CREATE+x}" ]; then
   echo "    salt '*' test.ping"
   echo
   # TBD improve this
+  # below shellcheck is disabled because pgrep ist not an alternative if you want to display the full command line (in contrast to information extraction)
+  # shellcheck disable=SC2009
   echo "${PROV}" | grep -q '^multipass$' || \
-  echo -e "HINT: ssh tunnels are not maintained across reboots yet - re-establish them after reboot by running (foreach IP in <master IP or masterless minion IPs>):\n  $(ps -ef | grep [a]utossh | sed 's@^.*/autossh@autossh -f@g' | grep "root")"
+  echo -e "HINT: ssh tunnels are not maintained across reboots yet - re-establish them after reboot by running (foreach IP in <master IP or masterless minion IPs>):\n  $(ps -ef | grep '[a]utossh' | sed 's@^.*/autossh@autossh -f@g' | grep "root")"
 fi
 
 if [ -n "${VMs_2_DELETE+x}" ]; then
