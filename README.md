@@ -28,6 +28,11 @@ Inside the test-vm's the salt directories are mapped to /srv/salt/*
 - internet connection (for things like package install)  
 - In case of a vmware-vm as host, following settings are needed:  
   ![settings vmware-vm](images/vmware_setting.png)
+- In case you want to use "Google Cloud" as a provider backend you need:
+  - An account and a project in GCP (with allocated budget)
+  - The gcloud cli utility installed (`snap install google-cloud-sdk --classic`)
+  - Some additional dependencies installed (`apt-get install -y nfs-kernel-server portmap autossh`)
+  - Gcloud configured to use the correct account/project (core/account property): (`gcloud init`)
 
 ## 1.2. configuration
 
@@ -41,8 +46,20 @@ used to deploy the ssh-pub-key to each launchend vm to `root` and to the normal 
 
 Further, in `samutev.conf` you can customize [cloudinit](https://cloudinit.readthedocs.io/en/latest/) to bootstrap the vms.
 
+If you intend to use the GCP provider backend you also need to customize 
+1. `my_ssh_pub_key=""`  
+should be the public SSH key you want to use to connect to the instances
+2. `DEFAULT_GCP_ZONE` and `FALLBACK_GCP_MACH_TYPE`   
+should not be modified unless you know what/why you are doing 
 
 ## 1.3. usage
+### gcp
+See section `multipass` - only the default values displayed differ a little.
+To use provider `gcp` instead of the default (`multipass`) just prefix the script with `PROVIDER=gcp`:
+```
+PROVIDER=gcp ./samutev.sh -h 
+```
+### multipass
 ```
 Usage:
   ./samutev.sh -h                        display this help message
@@ -89,18 +106,35 @@ Both directories will be available either to the salt master or to masterless mi
 
 ### 1.4.2. vm defaults
 
+### multipass
 type | default
 -----|--------
 cpu | 2
 memory | 1 (GB)
 disk | 3 (GB)
 
+### gcp
+Type: e2-micro
+
+type | default
+-----|--------
+cpu | 2
+memory | 1 (GB)
+disk | 10 (GB)
+
+
 ### 1.4.3. performance
 some meassured times, create 4 vm's, 1 salt-master and 3 minions:  
 `samutev.sh -s "project-master project-app project-db project-web"`  
 
+#### multipass
 environment | time
 ------------|------
 vm Testcluster (4GB RAM)| 10:49 min
 Lenovo x390 (16GB RAM)| 04:27 min
 Lenoveo P53 (32GB RAM)| 03:31 min
+
+#### gcp
+environment | time
+------------|------
+not relevant| 05:38
