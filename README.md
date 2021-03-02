@@ -4,16 +4,20 @@
     - [1.1. requirements](#11-requirements)
     - [1.2. configuration](#12-configuration)
     - [1.3. usage](#13-usage)
+        - [1.3.1. gcp](#131-gcp)
+        - [1.3.2. multipass](#132-multipass)
     - [1.4. some details](#14-some-details)
         - [1.4.1. directories](#141-directories)
         - [1.4.2. vm defaults](#142-vm-defaults)
-        - [1.4.3. performance](#143-performance)
+        - [1.4.3. multipass](#143-multipass)
+        - [1.4.4. gcp](#144-gcp)
+        - [1.4.5. performance](#145-performance)
 
 <!-- /TOC -->
 
 # 1. samutev: Salt Multipass Test Vm's
 
-samutev helps you to deploy [quickly](#143-performance) local test vm's using multipass.
+samutev helps you to deploy [quickly](#145-performance) local test vm's using multipass.
 
 Test-vm's can be deployed either as masterless minion or as a master with minions.  
 The resulting test-vm's are preconfigured with working saltstack.  
@@ -21,14 +25,14 @@ Inside the test-vm's the salt directories are mapped to /srv/salt/*
 
 ## 1.1. requirements
 - a [salt-repo-base-directory ($salt_base)](#12-configuration) with cloned repos `salt-states` and `salt-pillars` of your project inside
-- ubuntu 20.04
-- multipass (`apt install snapd; snap install multipass`)
-- enough place for created vm-disks in `/var`
-- enough memory forthe vm's - according to application needs
-- internet connection (for things like package install)  
-- In case of a vmware-vm as host, following settings are needed:  
+- __ubuntu__ 20.04
+- __multipass__ (`apt install snapd; snap install multipass`)
+- enough __space__ for created vm-disks in `/var`
+- enough __memory__ for created vm's - according to application needs
+- __internet__ connection (for things like package install)  
+- In case of a __vmware-vm__ as multipass host, following settings are needed:  
   ![settings vmware-vm](images/vmware_setting.png)
-- In case you want to use "Google Cloud" as a provider backend you need:
+- In case you want to use __"Google Cloud"__ as a provider backend you need:
   - An account and a project in GCP (with allocated budget)
   - The gcloud cli utility installed (`snap install google-cloud-sdk --classic`)
   - Some additional dependencies installed (`apt-get install -y nfs-kernel-server portmap autossh`)
@@ -53,13 +57,15 @@ should be the public SSH key you want to use to connect to the instances
 should not be modified unless you know what/why you are doing 
 
 ## 1.3. usage
-### gcp
+
+### 1.3.1. gcp
 See section `multipass` - only the default values displayed differ a little.
 To use provider `gcp` instead of the default (`multipass`) just prefix the script with `PROVIDER=gcp`:
 ```
 PROVIDER=gcp ./samutev.sh -h 
 ```
-### multipass
+
+### 1.3.2. multipass
 ```
 Usage:
   ./samutev.sh -h                        display this help message
@@ -106,14 +112,14 @@ Both directories will be available either to the salt master or to masterless mi
 
 ### 1.4.2. vm defaults
 
-### multipass
+### 1.4.3. multipass
 type | default
 -----|--------
 cpu | 2
 memory | 1 (GB)
 disk | 3 (GB)
 
-### gcp
+### 1.4.4. gcp
 Type: e2-micro
 
 type | default
@@ -123,18 +129,19 @@ memory | 1 (GB)
 disk | 10 (GB)
 
 
-### 1.4.3. performance
+### 1.4.5. performance
 some meassured times, create 4 vm's, 1 salt-master and 3 minions:  
 `samutev.sh -s "project-master project-app project-db project-web"`  
 
-#### multipass
+__multipass__
 environment | time
 ------------|------
 vm Testcluster (4GB RAM)| 10:49 min
 Lenovo x390 (16GB RAM)| 04:27 min
+Lenovo T14 AMD (32GB RAM)| 03:45 min
 Lenoveo P53 (32GB RAM)| 03:31 min
 
-#### gcp
+__gcp__
 environment | time
 ------------|------
-not relevant| 05:38
+google cloud| 05:38
