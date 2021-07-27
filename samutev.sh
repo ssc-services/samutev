@@ -16,7 +16,7 @@ C_DEFAULT=2
 M_DEFAULT=1
 # gcp image minimum is 10G
 GCP_MINIMUM_DISK=10
-echo "${PROV}" | grep -q '^multipass$' && D_DEFAULT=3 || D_DEFAULT=${GCP_MINIMUM_DISK}
+echo "${PROV}" | grep -q '^multipass$' && D_DEFAULT=4 || D_DEFAULT=${GCP_MINIMUM_DISK}
 
 scriptpath=$(readlink -f "${0}")
 
