@@ -49,7 +49,7 @@ apt:
         -----END PGP PUBLIC KEY BLOCK-----
     salt.list:
       source: |
-        deb [ arch=amd64 ] http://repo.saltstack.com/py3/ubuntu/VERSION_ID/amd64/3001 VERSION_CODENAME main
+        deb [ arch=amd64 ] http://repo.saltstack.com/py3/ubuntu/VERSION_ID/amd64/latest VERSION_CODENAME main
   geoip: false
 package_update: true
 package_upgrade: false
