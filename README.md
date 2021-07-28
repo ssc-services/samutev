@@ -117,7 +117,7 @@ type | default
 -----|--------
 cpu | 2
 memory | 1 (GB)
-disk | 3 (GB)
+disk | 4 (GB)
 
 ### 1.4.4. gcp
 Type: e2-micro
