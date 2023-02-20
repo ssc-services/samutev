@@ -268,7 +268,7 @@ function create_test_VMs() {
 
     echo "launching ${VM} ($TYPE with cpu=$CPU mem=${MEM}G disk=${DISK}G${IMAGE_INFO})"
     if echo "${PROV}" | grep -q '^multipass$'; then \
-    multipass launch --cpus "${CPU}" --disk "${DISK}"G --mem "${MEM}"G --name "${VM}" --cloud-init tmp_cloudinit.$$ "${IMAGE}"; else \
+    multipass launch --cpus "${CPU}" --disk "${DISK}"G --memory "${MEM}"G --name "${VM}" --cloud-init tmp_cloudinit.$$ "${IMAGE}"; else \
     gcloud compute instances create "${VM}" --zone="${DEFAULT_GCP_ZONE}" --machine-type="$GCP_MACH_TYPE" --image-project=ubuntu-os-cloud --image-family="${IMAGE}" --boot-disk-type=pd-standard --boot-disk-size="${DISK}GB" --metadata-from-file user-data=tmp_cloudinit.$$; fi
     RET=$?
     if [ "$TYPE" != "minion" ]; then
